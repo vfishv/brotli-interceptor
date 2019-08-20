@@ -11,8 +11,12 @@ import okio.Okio;
 import okio.Source;
 
 import java.io.IOException;
+import java.util.List;
 
 public class BrotliResponseInterceptor implements Interceptor {
+
+  private static final String HeaderAcceptEncoding = "Accept-Encoding";
+
   @Override
   public Response intercept(Chain chain) throws IOException {
     Request userRequest = chain.request();
@@ -20,7 +24,19 @@ public class BrotliResponseInterceptor implements Interceptor {
 
     // If we add an "Accept-Encoding: br" header field we're responsible for also decompressing
     // the transfer stream.
-    requestBuilder.addHeader("Accept-Encoding", "br");
+
+    List<String> encodings = userRequest.headers(HeaderAcceptEncoding);
+    if (encodings == null || encodings.isEmpty()) {
+      requestBuilder.addHeader(HeaderAcceptEncoding, "br");
+    } else {
+      //Accept-Encoding: gzip, deflate
+      requestBuilder.removeHeader(HeaderAcceptEncoding);
+      StringBuffer sb = new StringBuffer();
+      for (String encoding : encodings) {
+        sb.append(encoding).append(", ");
+      }
+      sb.append("br");
+    }
 
     Response networkResponse = chain.proceed(requestBuilder.build());
 
