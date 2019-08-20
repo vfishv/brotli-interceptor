@@ -36,6 +36,7 @@ public class BrotliResponseInterceptor implements Interceptor {
         sb.append(encoding).append(", ");
       }
       sb.append("br");
+      requestBuilder.addHeader(HeaderAcceptEncoding, sb.toString());
     }
 
     Response networkResponse = chain.proceed(requestBuilder.build());
